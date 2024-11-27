@@ -41,7 +41,7 @@ Execute o programa.
 # Fluxo de Operações
 Ao executar o programa, você verá um menu com as opções abaixo:
 
-'''
+```
 1: Cadastrar Categoria
 2: Cadastrar Produtos
 3: Consultar Produto
@@ -53,7 +53,7 @@ Ao executar o programa, você verá um menu com as opções abaixo:
 9: Deletar Produto
 10: Deletar Categoria (e todos os produtos presentes nessa categoria)
 11: Sair do Programa
-'''
+```
 
 Basta escolher a operação desejada e seguir as instruções.
 
@@ -61,7 +61,7 @@ Basta escolher a operação desejada e seguir as instruções.
 
 **Cadastro de Produto:**
 
-'''
+```
 Digite o id do produto: 1
 Digite o nome do produto: Notebook
 Digite a categoria do produto: Eletrônicos
@@ -69,12 +69,12 @@ Digite a quantidade de itens: 10
 Digite o valor do produto: 3500.00
 Digite a localização do produto: A1-B3
 Produto 'Notebook' cadastrado com sucesso.
-'''
+```
 
 **Registrar Entrada:**
 
-'''
+```
 Digite o id do produto que você deseja registrar a movimentação de entrada: 1
 Digite a quantidade do produto que você deseja registrar a movimentação de entrada: 5
 Entrada de 5 unidades para o produto 'Notebook' registrada.
-'''
+```
