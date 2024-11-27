@@ -86,7 +86,25 @@ def cadastrar_produto(id_produto, nome, categoria, quantidade, preco, localizaca
     salvar_dados_json()
 
 # Função para consultar um produto pelo ID
-def consultar_produto(id_produto):
+def consultar_produto():
+    while True:
+        try:
+            pesquisa = int(input("1: Pesquisa por Nome. \n2: Pesquisa por ID. \n"))
+            if pesquisa > 2 or pesquisa < 1:
+                print("Valor inválido.")
+            elif pesquisa == 2 :
+                id = input('Digite o id do produto que deseja procurar. \n')
+                consultar_produto_por_ID(id)
+                break
+            else:
+                nome = input('Digite o nome do produto que deseja procurar. \n')
+                consultar_produto_por_nome(nome)
+                break
+        except:
+            print("Valor inválido.")
+
+# Função para consultar um produto pelo ID
+def consultar_produto_por_ID(id_produto):
     produto = produtos.get(id_produto)
     if produto:
         print(f"ID: {produto.id_produto}, Nome: {produto.nome}, Categoria: {produto.categoria}, "
@@ -94,7 +112,18 @@ def consultar_produto(id_produto):
     else:
         print("Produto não encontrado.")
     salvar_dados_json()
-        
+    
+# Função para consultar um produto pelo nome
+def consultar_produto_por_nome(nome_produto):
+    print(f"Resultados para '{nome_produto}':")
+    encontrados = [produto for produto in produtos.values() if nome_produto.lower() in produto.nome.lower()]
+    if encontrados:
+        for produto in encontrados:
+            print(f"ID: {produto.id_produto}, Nome: {produto.nome}, Categoria: {produto.categoria}, "
+                  f"Quantidade: {produto.quantidade}, Preço: {produto.preco}, Localização: {produto.localizacao}")
+    else:
+        print("Nenhum produto encontrado com esse nome.")
+
 # Função para registrar uma movimentação de entrada
 def registrar_entrada(id_produto, quantidade):
     produto = produtos.get(id_produto)
@@ -197,11 +226,7 @@ while True :
                 except:
                     print('Opção Invalida')
             elif escolha == 3:
-                try:
-                    id = input('Digite o id do produto que deseja procurar. \n')
-                    consultar_produto(id)
-                except:
-                    print('Opção Invalida')
+                consultar_produto()
             elif escolha == 4:
                 try:
                     id = input('Digite o id do produto que você deseja registrar a movimentação de entrada. \n')
@@ -254,3 +279,4 @@ while True :
                 break            
     except:
         print('Opcão inválida')
+
