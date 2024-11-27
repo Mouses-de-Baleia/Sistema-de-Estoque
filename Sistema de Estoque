@@ -1,0 +1,256 @@
+from datetime import datetime
+import json
+
+# Estrutura de Produto
+class Produto:
+    def __init__(self, id_produto, nome, categoria, quantidade, preco, localizacao):
+        self.id_produto = id_produto
+        self.nome = nome
+        self.categoria = categoria
+        self.quantidade = quantidade
+        self.preco = preco
+        self.localizacao = localizacao
+
+# Estrutura de Categoria
+class Categoria:
+    def __init__(self, nome):
+        self.nome = nome
+
+# Estrutura de Movimentação
+class Movimentacao:
+    def __init__(self, id_mov, id_produto, tipo, quantidade, data=None):
+        self.id_mov = id_mov
+        self.id_produto = id_produto
+        self.tipo = tipo  # 'entrada' ou 'saida'
+        self.quantidade = quantidade
+        self.data = data or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+# Base de Dados
+produtos = {}
+categorias = {}
+movimentacoes = []
+
+
+# Função para salvar dados em JSON
+def salvar_dados_json():
+    with open("estoque_data.json", "w") as f:
+        # Converte os objetos para dicionários
+        data = {
+            "produtos": {id_: produto.__dict__ for id_, produto in produtos.items()},
+            "categorias": {nome: categoria.__dict__ for nome, categoria in categorias.items()},
+            "movimentacoes": [mov.__dict__ for mov in movimentacoes]
+        }
+        json.dump(data, f, indent=4)
+    print("Dados salvos com sucesso em JSON.")
+
+# Função para carregar dados de JSON
+def carregar_dados_json():
+    global produtos, categorias, movimentacoes
+    try:
+        with open("estoque_data.json", "r") as f:
+            data = json.load(f)
+            produtos.update({id_: Produto(**prod) for id_, prod in data["produtos"].items()})
+            categorias.update({nome: Categoria(**cat) for nome, cat in data["categorias"].items()})
+            movimentacoes.extend([Movimentacao(**mov) for mov in data["movimentacoes"]])
+        print("Dados carregados com sucesso do JSON.")
+        for produto in produtos.values():
+            produto.id_produto = int(produto.id_produto)
+            produto.quantidade = int(produto.quantidade)
+            produto.preco = float(produto.preco)
+    except FileNotFoundError:
+        print("Nenhum dado encontrado, iniciando novo arquivo.")
+
+# Carrega os dados ao iniciar o programa
+carregar_dados_json()
+
+# Função para cadastrar uma nova categoria
+def cadastrar_categoria(nome):
+    if nome not in categorias:
+        categorias[nome] = Categoria(nome)
+        print(f"Categoria '{nome}' cadastrada.")
+    else:
+        print(f"Categoria '{nome}' já existe.")
+    salvar_dados_json()
+
+# Função para cadastrar um novo produto
+def cadastrar_produto(id_produto, nome, categoria, quantidade, preco, localizacao):
+    if id_produto in produtos:
+        print("Produto já cadastrado.")
+        return
+    if categoria not in categorias:
+        print("Categoria não existe. Cadastre a categoria primeiro.")
+        return
+
+    produtos[id_produto] = Produto(id_produto, nome, categoria, quantidade, preco, localizacao)
+    print(f"Produto '{nome}' cadastrado com sucesso.")
+    salvar_dados_json()
+
+# Função para consultar um produto pelo ID
+def consultar_produto(id_produto):
+    produto = produtos.get(id_produto)
+    if produto:
+        print(f"ID: {produto.id_produto}, Nome: {produto.nome}, Categoria: {produto.categoria}, "
+              f"Quantidade: {produto.quantidade}, Preço: {produto.preco}, Localização: {produto.localizacao}")
+    else:
+        print("Produto não encontrado.")
+    salvar_dados_json()
+        
+# Função para registrar uma movimentação de entrada
+def registrar_entrada(id_produto, quantidade):
+    produto = produtos.get(id_produto)
+    if produto:
+        produto.quantidade += quantidade
+        movimentacoes.append(Movimentacao(len(movimentacoes) + 1, id_produto, 'entrada', quantidade))
+        print(f"Entrada de {quantidade} unidades para o produto '{produto.nome}' registrada.")
+    else:
+        print("Produto não encontrado.")
+    salvar_dados_json()
+
+# Função para registrar uma movimentação de saída
+def registrar_saida(id_produto, quantidade):
+    produto = produtos.get(id_produto)
+    if produto:
+        if produto.quantidade >= quantidade:
+            produto.quantidade -= quantidade
+            movimentacoes.append(Movimentacao(len(movimentacoes) + 1, id_produto, 'saida', quantidade))
+            print(f"Saída de {quantidade} unidades para o produto '{produto.nome}' registrada.")
+        else:
+            print("Quantidade insuficiente no estoque.")
+    else:
+        print("Produto não encontrado.")
+    salvar_dados_json()
+
+# Relatório de produtos com estoque baixo
+def relatorio_estoque_baixo(limite):
+    print("Produtos com estoque baixo:")
+    for produto in produtos.values():
+        if produto.quantidade <= limite:
+            print(f"ID: {produto.id_produto}, Nome: {produto.nome}, Quantidade: {produto.quantidade}")
+    salvar_dados_json()
+
+# Relatório de produtos com excesso de estoque
+def relatorio_excesso_estoque(limite):
+    print("Produtos com excesso de estoque:")
+    for produto in produtos.values():
+        if produto.quantidade >= limite:
+            print(f"ID: {produto.id_produto}, Nome: {produto.nome}, Quantidade: {produto.quantidade}")
+    salvar_dados_json()
+
+# Consultar histórico de movimentações para um produto específico
+def consultar_historico_movimentacoes(id_produto):
+    print(f"Movimentações para o produto ID {id_produto}:")
+    for mov in movimentacoes:
+        if mov.id_produto == id_produto:
+            print(f"ID Movimentação: {mov.id_mov}, Tipo: {mov.tipo}, Quantidade: {mov.quantidade}, Data: {mov.data}")
+    salvar_dados_json()
+
+def deletar_categoria(nome_categoria):
+    # Primeiro, verificamos se a categoria existe
+    if nome_categoria in categorias:
+        # Armazena os IDs dos produtos que serão removidos
+        produtos_removidos = []
+
+        # Percorre uma lista dos IDs dos produtos para evitar problemas de mutação do dicionário durante a iteração
+        for id_produto in list(produtos.keys()):
+            if produtos[id_produto].categoria == nome_categoria:
+                produtos_removidos.append(id_produto)
+                del produtos[id_produto]  # Deleta o produto
+
+        # Remove a categoria
+        del categorias[nome_categoria]
+        
+        # Salva as alterações no JSON
+        salvar_dados_json()
+
+        print(f"Categoria '{nome_categoria}' e os seguintes produtos foram removidos: {produtos_removidos}")
+    else:
+        print(f"A categoria '{nome_categoria}' não foi encontrada.")
+
+def deletar_produto(id_produto):
+    if id_produto in produtos:
+        del produtos[id_produto]
+        print(f"Produto {id_produto} deletado com sucesso.")
+        salvar_dados_json()
+    else:
+        print(f"Produto {id_produto} não encontrado.")
+
+escolha = 0
+# While para continuar utilizando o programa
+while True :
+    try:
+        escolha = int(input('O que você deseja fazer? \n 1: Cadastrar Categoria \n 2: Cadastrar Produtos \n 3: Consultar Produto \n 4: Registrar Entrada \n 5: Registrar Saída \n 6: Relatório de Estoque Baixo \n 7: Relatório de Excesso de Estoque \n 8: Consultar o Histórico de Movimentação \n 9: Deletar produto \n 10: Deletar categoria (e todos os produtos presentes nesssa categoria) \n 11: Sair do programa. \n'))
+        if escolha > 11:
+            print('Opção inválida.')
+        else:
+            if escolha == 1:
+                nomecategoria = input('Digite o nome da categoria. \n')
+                cadastrar_categoria(nomecategoria)
+            elif escolha == 2:
+                try:
+                    id = input('Digite o id do produto. \n')
+                    nomedoprodut = input('Digite o nome do produto. \n')
+                    categoria = input('Digite a categoria do produto. \n')
+                    quantidade = int(input('Digite a quantidade de itens. \n'))
+                    preco = float(input('Digite o valor do produto. \n'))
+                    localizacao = input('Digite a localização do produto. \n')
+                    cadastrar_produto(id, nomedoprodut, categoria, quantidade, preco, localizacao)
+                except:
+                    print('Opção Invalida')
+            elif escolha == 3:
+                try:
+                    id = input('Digite o id do produto que deseja procurar. \n')
+                    consultar_produto(id)
+                except:
+                    print('Opção Invalida')
+            elif escolha == 4:
+                try:
+                    id = input('Digite o id do produto que você deseja registrar a movimentação de entrada. \n')
+                    quantidade = int(input('Digite a quantiade do produto que você deseja registrar a movimentação de entrada. \n'))
+                    registrar_entrada(id, quantidade)
+                except:
+                    print('Opção Inválida')
+            elif escolha == 5:
+                try:
+                    id = input('Digite o id do produto que você deseja registrar a movimentação de saída. \n')
+                    quantidade = int(input('Digite a quantiade do produto que você deseja registrar a movimentação de saída. \n'))
+                    registrar_saida(id, quantidade)
+                except:
+                    print('Opção Inválida')
+            elif escolha == 6:
+                try:
+                    quantidade = int(input('Digite um número para ver os itens com menor quantidade que o valor selecionado. \n'))
+                    relatorio_estoque_baixo(quantidade)
+                except:
+                    print('Opção Inválida')
+            elif escolha == 7:
+                try:
+                    quantidade = int(input('Digite um número para ver os itens com maior quantidade que o valor selecionado. \n'))
+                    relatorio_excesso_estoque(quantidade)
+                except:
+                    print('Opção Inválida')
+            elif escolha == 8:
+                try:
+                    id = input('Digite o valor do ID para verificar suas movimentações. \n')
+                    consultar_historico_movimentacoes(id)
+                except:
+                    print('Opção Inválida')
+            elif escolha == 9:
+                try:
+                    id = input('Digite o ID do produto que você deseja deletar. \n')
+                    confirmacao = int(input('Você tem certeza? Essa ação não pode ser desfeita. \n 1: Sim \n 2: Não \n'))
+                    if confirmacao == 1:
+                        deletar_produto(id)
+                except:
+                    print('Opção Inválida')
+            elif escolha == 10:
+                try:
+                    categoria = input('Digite a categoria que você deseja deletar, além da categoria, todos os produtos nessa mesma categoria serão deletados. \n')
+                    confirmacao = int(input('Você tem certeza? Essa ação não pode ser desfeita. \n 1: Sim \n 2: Não \n'))
+                    if confirmacao == 1:
+                        deletar_categoria(categoria)
+                except:
+                    print('Opção Inválida')
+            else:
+                break            
+    except:
+        print('Opcão inválida')
