@@ -60,9 +60,6 @@ def carregar_dados_json():
     except FileNotFoundError:
         print("Nenhum dado encontrado, iniciando novo arquivo.")
 
-# Carrega os dados ao iniciar o programa
-carregar_dados_json()
-
 # Função para cadastrar uma nova categoria
 def cadastrar_categoria(nome):
     if nome not in categorias:
