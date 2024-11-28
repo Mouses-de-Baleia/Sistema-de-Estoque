@@ -1,5 +1,8 @@
 from stockLibrary import *
 
+# Carrega os dados ao iniciar o programa
+carregar_dados_json()
+
 escolha = 0
 # While para continuar utilizando o programa
 while True :
