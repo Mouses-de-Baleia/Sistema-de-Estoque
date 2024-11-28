@@ -1,4 +1,4 @@
-from stockLibrary import *
+from stockLibrary import *
 
 escolha = 0
 # While para continuar utilizando o programa
@@ -76,3 +76,4 @@ while True :
                 break            
     except:
         print('Opcão inválida')
+
